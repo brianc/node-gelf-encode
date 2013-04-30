@@ -1,6 +1,6 @@
 {
   "name": "gelf-encode",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Encode json into GELF compliant binary buffer(s)",
   "main": "index.js",
   "scripts": {
