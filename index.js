@@ -15,7 +15,7 @@ module.exports = function gelfEncode(message, callback) {
   } catch(e) {
     return callback(e, null);
   }
-  zlib.deflate(msg, ok(callback, function(buffer) {
+  zlib[module.exports.compressType](msg, ok(callback, function(buffer) {
     if(buffer.length <= MTU) {
       callback(null, [buffer])
     } else {
@@ -35,3 +35,5 @@ module.exports = function gelfEncode(message, callback) {
     }
   }));
 };
+
+module.exports.compressType = 'deflate';
