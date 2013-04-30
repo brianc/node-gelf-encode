@@ -7,10 +7,14 @@ var ok = require('okay');
 var GELF_CHUNK_HEADER_LENGTH = 10;
 var CHUNKED_GELF_HEADER = Buffer([0x1e, 0x0f]);
 
-module.exports = function gelfEncode(message, compressType, callback) {
+module.exports = function gelfEncode(message, compressType, chunkSize, callback) {
   if(typeof compressType == 'function') {
     callback = compressType;
-    compressType = module.exports.compressType || 'deflate';
+    chunkSize = module.exports.chunkSize;
+    compressType = module.exports.compressType;
+  } else if(typeof chunkSize == 'function') {
+    callback = chunkSize;
+    chunkSize = module.exports.chunkSize;
   }
   var msg;
   try{
@@ -19,10 +23,10 @@ module.exports = function gelfEncode(message, compressType, callback) {
     return callback(e, null);
   }
   zlib[compressType](msg, ok(callback, function(buffer) {
-    if(buffer.length <= module.exports.chunkSize) {
+    if(buffer.length <= chunkSize) {
       callback(null, [buffer])
     } else {
-      var buffers = bufferSlice(buffer, module.exports.chunkSize);
+      var buffers = bufferSlice(buffer, chunkSize - 12);
       if(buffers.length > 128) {
         return callback(new Error('cannot encode a GELF message of more than 128 packets'));
       }

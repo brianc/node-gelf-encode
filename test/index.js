@@ -20,6 +20,18 @@ describe('gelf-encode', function() {
       })
     });
   });
+
+  it('splits packet into correct sizes', function(done) {
+    var pack = {version: '1.0', full_message: 'something that will get fill'};
+    gelfEncode(pack, 'deflate', 50, function(err, buffers) {
+      assert.ifError(err);
+      assert.equal(buffers.length, 2);
+      assert.equal(buffers[0].length, 50);
+      assert(buffers[1].length <= 50);
+      done();
+    });
+  });
+
   var compressions = [{compress: 'deflate', decompress: 'inflate'},{compress: 'gzip', decompress: 'gunzip'}];
   compressions.forEach(function(compression) {
     describe('with ' + compression.compress, function() {
@@ -78,6 +90,7 @@ describe('gelf-encode', function() {
             var k = res.toString('utf8');
             var out = JSON.parse(k);
             assert.equal(out.full_message, full_message, 'full_message mismatch');
+            assert.equal(out.version, '1.0')
             done();
           });
         });
