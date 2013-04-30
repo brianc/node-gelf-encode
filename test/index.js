@@ -7,16 +7,26 @@ var ok = require('okay');
 var gelfEncode = require(__dirname + '/../');
 
 describe('gelf-encode', function() {
+  it('uses defalte by default', function(done) {
+    var pack ={version: '1.0'}; 
+    gelfEncode(pack, function(err, buffers) {
+      assert.ifError(err);
+      assert(util.isArray(buffers), 'buffers should be an array');
+      assert.equal(buffers.length, 1);
+      zlib['inflate'](buffers[0], function(err, result) {
+        assert.ifError(err);
+        assert.equal(result.toString('utf8'), JSON.stringify(pack));
+        done();
+      })
+    });
+  });
   var compressions = [{compress: 'deflate', decompress: 'inflate'},{compress: 'gzip', decompress: 'gunzip'}];
   compressions.forEach(function(compression) {
-    describe('with ' + compression, function() {
-      before(function() {
-        gelfEncode.compressType = compression.compress;
-      });
+    describe('with ' + compression.compress, function() {
       it('returns error in callback on invalid json', function(done) {
         var o = {};
         o.o = o;
-        gelfEncode(o, function(err, buffers) {
+        gelfEncode(o, compression.compress, function(err, buffers) {
           assert(err);
           assert(err instanceof Error);
           assert(err.message.indexOf('circular') > -1, "message should say something about 'circular'");
@@ -26,7 +36,7 @@ describe('gelf-encode', function() {
 
       it('encodes a single packet', function(done) {
         var pack ={version: '1.0'}; 
-        gelfEncode(pack, function(err, buffers) {
+        gelfEncode(pack, compression.compress, function(err, buffers) {
           assert.ifError(err);
           assert(util.isArray(buffers), 'buffers should be an array');
           assert.equal(buffers.length, 1);
@@ -47,7 +57,7 @@ describe('gelf-encode', function() {
           timestamp: new Date().getTime(),
           facility: 'happiness'
         };
-        gelfEncode(msg, function(err, buffers) {
+        gelfEncode(msg, compression.compress, function(err, buffers) {
           assert.ifError(err);
           assert(buffers.length > 1, 'expected more than 1 buffer');
           var id = buffers[0].slice(2, 10);
@@ -60,7 +70,16 @@ describe('gelf-encode', function() {
             assert.equal(buffer[10], index);
             assert.equal(buffer[11], buffers.length);
           });
-          done();
+          var all = buffers.map(function(buffer) {
+            return buffer.slice(12)
+          })
+          zlib[compression.decompress](Buffer.concat(all), function(err, res) {
+            assert.ifError(err);
+            var k = res.toString('utf8');
+            var out = JSON.parse(k);
+            assert.equal(out.full_message, full_message, 'full_message mismatch');
+            done();
+          });
         });
       });
 
@@ -73,12 +92,11 @@ describe('gelf-encode', function() {
           timestamp: new Date().getTime(),
           facility: 'happiness'
         };
-        gelfEncode(msg, function(err, buffers) {
+        gelfEncode(msg, compression.compress, function(err, buffers) {
           assert(err);
           done();
         });
       });
-
     });
-  })
+  });
 });
