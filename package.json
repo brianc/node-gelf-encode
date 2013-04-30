@@ -1,0 +1,21 @@
+{
+  "name": "gelf-encode",
+  "version": "0.0.0",
+  "description": "Encode json into GELF compliant binary buffer(s)",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/brianc/gelf-encode.git"
+  },
+  "keywords": [
+    "gelf",
+    "GELF",
+    "graylog",
+    "graylog2"
+  ],
+  "author": "Brian M. Carlson",
+  "license": "MIT"
+}
