@@ -17,5 +17,9 @@
     "graylog2"
   ],
   "author": "Brian M. Carlson",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "okay": "~0.3.0",
+    "buffer-slice": "0.0.1"
+  }
 }
