@@ -65,31 +65,53 @@ gelfEncode(message, function(err, buffers) {
   }
 });
 
+//gelfEncode cares not about what type of object you want to encode
+gelfEncode({lookMom: 'no hands!'}, function(err, buffers) {
+  for(var i = 0; i < buffers.length; i++) {
+    client.send(buffers[i]);
+  }
+});
+
+//circular ojbect reference...uh oh....
+var o = {};
+o.o = o;
+gelfEncode(o, function(err, buffers) {
+  //err will be the JSON.stringify error
+  //gelfEncode will not THROW on a JSON.stringify exception
+  //because your logging layer crashing your app is unacceptable
+});
 ```
 
 ## why use gelf?
 
-You can't log to disk in heroku, so you have to log to a remote server.
-Gelf is nice because it's udp so it doesn't block your application.  
-You can easily collect gelf messages on a remote server.
-Structured log messages make future log investigation easier.
+- You can't log to disk in heroku, so you have to log to a remote server.
+- Gelf is nice because it's udp so it doesn't block your application.  
+- You can easily collect gelf messages on a remote server.
+- Structured log messages make future log investigation easier.
 
 ## protip
 
 __do not use graylog2__ (YMMV)
 
-I spent three full days fiddling with graylog2 trying to get it to work, trying to track down UDP packet loss, installing ruby 1.9.3, bundler, passenger, apache, passenger+apache, mongodb, elasticsearch :barf:
+I spent three full days fiddling with graylog2 trying to get it to work, trying to track down UDP packet loss, installing ruby 1.9.3, bundler, passenger, apache, passenger+apache, mongodb, doing network traces, setting up UDP proxies :barf:
+
 I eventually gave up.
-I installed logstash with the GELF input and was up and running in _less than an hour_.
 
-So do this
+I went to the graylog2 irc channel for help, but could get no one to respond
 
-1) download http://logstash.net/
-2) follow logstash installation instructions
-3) clone ths somehwere: https://github.com/elasticsearch/kibana3
-4) `cd kibana3`
-5) `node scripts/server`
-6) Have your mind completely blown to pieces.
+I went to the logstash irc channel for help, and was imediately greeted with friendly people suggesting I give logstash a try.
+
+I installed logstash, configured the GELF input (2 lines in the config file), and was up and running in _less than an hour_.
+
+__do this__
+
+1. download http://logstash.net/
+2. follow logstash installation instructions
+3. clone ths somehwere: https://github.com/elasticsearch/kibana3
+4. `cd kibana3`
+5. `node scripts/server`
+6. Have your mind completely blown to pieces. (example: http://demo.kibana.org/#/dashboard)
+7. ask for help in #logstash or open an issue here if you have any problems
 
 _note: for production use you'll want to use standalone elastic search and not the built in logstash instance. thankfully installing elasticsearch could not be easier_
 
