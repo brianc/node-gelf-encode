@@ -1,7 +1,16 @@
-node-gelf-encode
+gelf-encode
 ================
 
-Encode GELF json to proper GELF binary packets ready to be sent out via UDP.
+Encode GELF structured JavaScript objects to proper GELF binary packets ready to be sent out via UDP.  Supports chunked GELF transparently.
+
+
+## why?
+
+There are already a lot of graylog/gelf libraries for node.  Besides a bit of NIH I think they all have various problems, mostly doing _way_ more than one thing.
+
+This module does _one thing only_.  It doesn't format your objects for you or attach properties.  It doesn't send things via UDP.
+
+Also, care has been taken to never throw exceptions from this module.  The last thing you want is your logging layer to crash your application.  If you enounter an exception, open an issue or pull request immediately please. :smile:
 
 ## api
 
@@ -60,7 +69,29 @@ gelfEncode(message, function(err, buffers) {
 
 ## why use gelf?
 
-You can't log to disk in heroku.  Gelf is nice because it's udp so it doesn't block your application.  You can easily collect gelf messages on another server using logstash.
+You can't log to disk in heroku, so you have to log to a remote server.
+Gelf is nice because it's udp so it doesn't block your application.  
+You can easily collect gelf messages on a remote server.
+Structured log messages make future log investigation easier.
+
+## protip
+
+__do not use graylog2__ (YMMV)
+
+I spent three full days fiddling with graylog2 trying to get it to work, trying to track down UDP packet loss, installing ruby 1.9.3, bundler, passenger, apache, passenger+apache, mongodb, elasticsearch :barf:
+I eventually gave up.
+I installed logstash with the GELF input and was up and running in _less than an hour_.
+
+So do this
+
+1) download http://logstash.net/
+2) follow logstash installation instructions
+3) clone ths somehwere: https://github.com/elasticsearch/kibana3
+4) `cd kibana3`
+5) `node scripts/server`
+6) Have your mind completely blown to pieces.
+
+_note: for production use you'll want to use standalone elastic search and not the built in logstash instance. thankfully installing elasticsearch could not be easier_
 
 ## license
 
